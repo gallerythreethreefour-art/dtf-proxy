@@ -800,10 +800,19 @@ function renderResult(imgUrl, analysis, mode) {
     </div>`;
   canvas.appendChild(ac);
 
-  // Prompt
+  // Editable prompt card
   const pc = document.createElement('div');
   pc.className = 'prompt-card';
-  pc.innerHTML = `<div class="pc-head">Prompt Used</div><div class="pc-body">${currentPrompt}</div>`;
+  pc.innerHTML = `
+    <div class="pc-head" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Prompt — Edit & Regenerate</span>
+      <span style="font-size:0.58rem;opacity:0.6">fix text, elements, anything</span>
+    </div>
+    <textarea id="prompt-editor" class="pc-body" style="width:100%;min-height:140px;resize:vertical;border:none;outline:none;font-family:'DM Mono',monospace;font-size:0.66rem;line-height:1.7;padding:12px 14px;background:white;color:var(--ink);">${currentPrompt}</textarea>
+    <div style="padding:8px 14px;background:var(--surface);border-top:1px solid var(--rule);display:flex;gap:8px;">
+      <button id="rc-regen-edit" style="flex:1;padding:7px;background:var(--ink);color:white;border:none;font-family:'DM Mono',monospace;font-size:0.68rem;cursor:pointer;border-radius:3px;letter-spacing:0.05em;">↺ Regenerate with edits</button>
+      <button id="rc-reset-prompt" style="padding:7px 12px;background:transparent;border:1px solid var(--rule);font-family:'DM Mono',monospace;font-size:0.68rem;cursor:pointer;border-radius:3px;">Reset</button>
+    </div>`;
   canvas.appendChild(pc);
 
   // Image card
@@ -817,10 +826,20 @@ function renderResult(imgUrl, analysis, mode) {
     <div class="rc-img"><img src="${imgUrl}" alt="Generated" crossorigin="anonymous"></div>
     <div class="rc-foot">
       <button class="pri" id="rc-dl">↓ Download PNG</button>
-      <button id="rc-regen">↺ Regenerate</button>
+      <button id="rc-regen">↺ Regenerate same</button>
       <button id="rc-flip">⇄ Switch to ${mode==='match'?'Interpret':'Match'}</button>
     </div>`;
   canvas.appendChild(rc);
+
+  // Prompt editor events
+  const promptEditor = pc.querySelector('#prompt-editor');
+  pc.querySelector('#rc-regen-edit').addEventListener('click', () => {
+    currentPrompt = promptEditor.value;
+    run(true);
+  });
+  pc.querySelector('#rc-reset-prompt').addEventListener('click', () => {
+    promptEditor.value = currentPrompt;
+  });
 
   rc.querySelector('#rc-dl').addEventListener('click', doDownload);
   rc.querySelector('#rc-regen').addEventListener('click', ()=>run(true));
