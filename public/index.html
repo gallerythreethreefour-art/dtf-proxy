@@ -668,13 +668,11 @@ async function analyze(file, mode) {
     hybrid: 'HYBRID mode: extract all text and key elements faithfully (verbatim text, specific icons and positions). Regenerate illustration and background at full quality.'
   }[mode];
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('/anthropic', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': clKey.value.trim(),
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-calls': 'true'
+      'x-claude-key': clKey.value.trim(),
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
