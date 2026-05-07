@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DTF Print Prep</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --ink: #111;
+  --paper: #f4f1ed;
+  --rule: #ddd8d0;
+  --accent: #c0392b;
+  --green: #1a6b3c;
+  --muted: #888;
+  --surface: #eae6e0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+header {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.wordmark {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.wordmark em { color: var(--accent); font-style: normal; }
+
+.key-fields {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.key-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.key-group label {
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #777;
+  white-space: nowrap;
+}
+
+.key-input {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  color: #eee;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  padding: 5px 9px;
+  border-radius: 3px;
+  width: 190px;
+  outline: none;
+}
+
+.key-input:focus { border-color: var(--accent); }
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #333;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.dot.ok { background: #47d98a; }
+
+.body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: 0;
+}
+
+.sidebar {
+  border-right: 2px solid var(--ink);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.block {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.blabel {
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+/* Drop zone */
+.drop {
+  border: 2px dashed var(--rule);
+  border-radius: 4px;
+  padding: 24px 12px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+.drop:hover, .drop.over { border-color: var(--accent); background: rgba(192,57,43,0.04); }
+.drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.drop-icon { font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 6px; }
+.drop strong { display: block; margin-bottom: 3px; }
+.drop p { font-size: 0.7rem; color: var(--muted); line-height: 1.5; }
+.thumb { width: 100%; border-radius: 3px; margin-top: 10px; display: none; border: 1px solid var(--rule); }
+
+/* Dims */
+.dim-row { display: flex; gap: 8px; align-items: center; }
+.dim-in {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.9rem;
+  padding: 7px 8px;
+  border-radius: 3px;
+  text-align: center;
+  outline: none;
+}
+.dim-in:focus { border-color: var(--accent); }
+.dim-x { color: var(--muted); }
+.dim-unit { font-size: 0.68rem; color: var(--muted); }
+.px-note { font-size: 0.62rem; color: var(--muted); margin-top: 5px; font-style: italic; }
+
+/* Mode cards */
+.mode-card {
+  border: 1.5px solid var(--rule);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mode-card:last-child { margin-bottom: 0; }
+.mode-card.sel { border-color: var(--ink); background: #fffcf5; }
+.mode-card input { display: none; }
+.mode-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+.badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.5rem;
+  padding: 1px 5px;
+  border-radius: 2px;
+  letter-spacing: 0.1em;
+  vertical-align: middle;
+  margin-left: 5px;
+}
+.badge-red { background: var(--accent); color: white; }
+.badge-grn { background: var(--green); color: white; }
+.badge-blu { background: #2471a3; color: white; }
+.mode-desc { font-size: 0.65rem; color: var(--muted); line-height: 1.5; }
+
+/* Quality */
+.q-row { display: flex; gap: 6px; }
+.q-btn {
+  flex: 1;
+  padding: 7px 4px;
+  border: 1.5px solid var(--rule);
+  background: transparent;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  cursor: pointer;
+  border-radius: 3px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+.q-btn.on { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+
+/* Buttons */
+.btn-go {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: opacity 0.15s;
+  margin-bottom: 7px;
+}
+.btn-go:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-go:hover:not(:disabled) { opacity: 0.85; }
+
+.btn-sec {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 1.5px solid var(--rule);
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: border-color 0.15s;
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+}
+.btn-sec:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-sec:hover:not(:disabled) { border-color: var(--ink); }
+
+/* Main area */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.toolbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  padding: 3px 9px;
+  font-size: 0.62rem;
+}
+
+.sdot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.sdot.working { background: #f39c12; animation: pulse 0.8s infinite; }
+.sdot.done { background: var(--green); }
+.sdot.err { background: var(--accent); }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.2} }
+
+.canvas {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted);
+  text-align: center;
+}
+.empty .big { font-size: 3.5rem; opacity: 0.12; }
+.empty p { font-size: 0.72rem; line-height: 1.7; max-width: 280px; }
+
+/* Result */
+.result-card {
+  width: 100%;
+  max-width: 640px;
+  border: 1.5px solid var(--rule);
+  border-radius: 5px;
+  overflow: hidden;
+  background: white;
+}
+.rc-head {
+  padding: 10px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+}
+.rc-head strong { font-family: 'Bebas Neue', sans-serif; font-size: 0.95rem; letter-spacing: 0.05em; }
+.rc-img {
+  background: repeating-conic-gradient(#ddd 0% 25%, white 0% 50%) 0 0 / 18px 18px;
+}
+.rc-img img { width: 100%; display: block; }
+.rc-foot {
+  padding: 10px 14px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.rc-foot button {
+  padding: 5px 12px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+}
+.rc-foot button:hover { border-color: var(--ink); }
+.rc-foot button.pri { background: var(--ink); color: white; border-color: var(--ink); }
+
+.analysis-card {
+  width: 100%;
+  max-width: 640px;
+  border: 1.5px solid var(--rule);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.ac-head {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 8px 14px;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+}
+.ac-body {
+  background: white;
+  padding: 14px;
+  font-size: 0.68rem;
+  line-height: 1.9;
+}
+.ac-field { color: var(--muted); font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 8px; display: block; }
+.ac-val { color: var(--ink); }
+.ac-warn { color: var(--accent); }
+
+.prompt-card {
+  width: 100%;
+  max-width: 640px;
+  border: 1.5px solid var(--rule);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.pc-head {
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  padding: 7px 14px;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pc-body {
+  background: white;
+  padding: 12px 14px;
+  font-size: 0.66rem;
+  line-height: 1.7;
+  max-height: 160px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: var(--ink);
+}
+
+.spin-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--rule);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin-wrap p { font-size: 0.7rem; color: var(--muted); text-align: center; max-width: 260px; line-height: 1.6; }
+
+.log {
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 7px 20px;
+  font-size: 0.63rem;
+  color: var(--muted);
+  font-style: italic;
+  min-height: 30px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">DTF <em>Print</em> Prep</div>
+  <div class="key-fields">
+    <div class="key-group">
+      <label>Ideogram Key</label>
+      <input type="password" class="key-input" id="ig-key" placeholder="ideogram API key...">
+      <div class="dot" id="ig-dot"></div>
+    </div>
+    <div class="key-group">
+      <label>Claude Key</label>
+      <input type="password" class="key-input" id="cl-key" placeholder="anthropic API key...">
+      <div class="dot" id="cl-dot"></div>
+    </div>
+  </div>
+</header>
+
+<div class="body">
+  <div class="sidebar">
+
+    <div class="block">
+      <div class="blabel">1 · Upload Mockup</div>
+      <div class="drop" id="drop">
+        <input type="file" id="file-in" accept="image/*">
+        <span class="drop-icon">📎</span>
+        <strong>Drop mockup here</strong>
+        <p>PNG · JPG · WEBP<br>AI mockups, screenshots, anything</p>
+      </div>
+      <img class="thumb" id="thumb" alt="">
+    </div>
+
+    <div class="block">
+      <div class="blabel">2 · Print Size</div>
+      <div class="dim-row">
+        <input type="number" class="dim-in" id="w-in" value="12" min="1" max="60" step="0.5">
+        <span class="dim-x">×</span>
+        <input type="number" class="dim-in" id="h-in" value="14" min="1" max="60" step="0.5">
+        <span class="dim-unit">in</span>
+      </div>
+      <div class="px-note" id="px-note">3600 × 4200 px @ 300 DPI</div>
+    </div>
+
+    <div class="block">
+      <div class="blabel">3 · Mode</div>
+      <label class="mode-card sel" id="card-match">
+        <input type="radio" name="mode" value="match" checked>
+        <div class="mode-title">Match <span class="badge badge-red">FAITHFUL</span></div>
+        <div class="mode-desc">Reconstruct exactly — same text, layout, colors, elements.</div>
+      </label>
+      <label class="mode-card" id="card-interpret">
+        <input type="radio" name="mode" value="interpret">
+        <div class="mode-title">Interpret <span class="badge badge-grn">CREATIVE</span></div>
+        <div class="mode-desc">Mockup as direction only — improve composition and quality freely.</div>
+      </label>
+      <label class="mode-card" id="card-hybrid">
+        <input type="radio" name="mode" value="hybrid">
+        <div class="mode-title">Hybrid <span class="badge badge-blu">BEST OF BOTH</span></div>
+        <div class="mode-desc">Faithful text and elements, regenerated illustration and background.</div>
+      </label>
+    </div>
+
+    <div class="block">
+      <div class="blabel">4 · Quality</div>
+      <div class="q-row">
+        <button class="q-btn" data-m="V_2_TURBO">Turbo<br><span style="opacity:.5;font-size:.55rem">Fast</span></button>
+        <button class="q-btn on" data-m="V_2">Quality<br><span style="opacity:.5;font-size:.55rem">Best</span></button>
+      </div>
+    </div>
+
+    <div class="block">
+      <button class="btn-go" id="btn-go" disabled>Generate Print File</button>
+      <button class="btn-sec" id="btn-regen" disabled>↺ Regenerate (same prompt)</button>
+      <button class="btn-sec" id="btn-dl" disabled>↓ Download PNG</button>
+    </div>
+
+  </div>
+
+  <div class="main">
+    <div class="toolbar">
+      <div class="pill">
+        <div class="sdot" id="sdot"></div>
+        <span id="stxt">Ready</span>
+      </div>
+      <span id="tbar" style="margin-left:auto"></span>
+    </div>
+
+    <div class="canvas" id="canvas">
+      <div class="empty" id="empty">
+        <span class="big">✦</span>
+        <p>Upload a customer mockup, set print size, pick a mode, hit Generate.</p>
+        <p style="font-size:.62rem;margin-top:4px">Claude reads the design. Ideogram regenerates it at print quality.</p>
+      </div>
+    </div>
+
+    <div class="log" id="log">Waiting...</div>
+  </div>
+</div>
+
+<script>
+const QUALITY_SUFFIX = `Ultra high resolution, 300 DPI print-ready file, sharp focus throughout, no blur, no noise, no compression artifacts, centered composition with all elements fully contained within the artboard with generous safe margin, nothing touching or exceeding canvas edges, solid pure white background, no gradients, no borders, no frame, no watermark, no vignette, clean readable shapes with bold silhouette, subject clearly isolated and separated from white background, cinematic lighting with strong highlights and soft shadow falloff, high contrast, deep dimensional depth, optimized for large format DTF direct-to-film printing`;
+
+const ASPECTS = [
+  { code:'ASPECT_1_1',   r:1.000 },
+  { code:'ASPECT_4_3',   r:1.333 },
+  { code:'ASPECT_3_4',   r:0.750 },
+  { code:'ASPECT_16_9',  r:1.778 },
+  { code:'ASPECT_9_16',  r:0.563 },
+  { code:'ASPECT_2_3',   r:0.667 },
+  { code:'ASPECT_3_2',   r:1.500 },
+  { code:'ASPECT_10_16', r:0.625 },
+  { code:'ASPECT_16_10', r:1.600 },
+];
+
+function bestAspect(w, h) {
+  const t = w/h;
+  return ASPECTS.reduce((b,a) => Math.abs(a.r-t) < Math.abs(b.r-t) ? a : b).code;
+}
+
+// State
+let uploadedFile = null;
+let currentPrompt = null;
+let currentAspect = 'ASPECT_3_4';
+let selectedModel = 'V_2';
+let lastUrl = null;
+let busy = false;
+
+// DOM
+const igKey  = document.getElementById('ig-key');
+const clKey  = document.getElementById('cl-key');
+const igDot  = document.getElementById('ig-dot');
+const clDot  = document.getElementById('cl-dot');
+const drop   = document.getElementById('drop');
+const fileIn = document.getElementById('file-in');
+const thumb  = document.getElementById('thumb');
+const wIn    = document.getElementById('w-in');
+const hIn    = document.getElementById('h-in');
+const pxNote = document.getElementById('px-note');
+const btnGo  = document.getElementById('btn-go');
+const btnReg = document.getElementById('btn-regen');
+const btnDl  = document.getElementById('btn-dl');
+const canvas = document.getElementById('canvas');
+const empty  = document.getElementById('empty');
+const log    = document.getElementById('log');
+const sdot   = document.getElementById('sdot');
+const stxt   = document.getElementById('stxt');
+const tbar   = document.getElementById('tbar');
+
+// Keys — load from storage
+function loadKeys() {
+  const ik = localStorage.getItem('dtf_ig'); const ck = localStorage.getItem('dtf_cl');
+  if (ik) { igKey.value = ik; igDot.classList.add('ok'); }
+  if (ck) { clKey.value = ck; clDot.classList.add('ok'); }
+}
+loadKeys();
+
+function saveKey(input, dot, storageKey) {
+  const v = input.value.trim();
+  localStorage.setItem(storageKey, v);
+  dot.classList.toggle('ok', v.length > 10);
+  checkReady();
+}
+
+igKey.addEventListener('blur', () => saveKey(igKey, igDot, 'dtf_ig'));
+clKey.addEventListener('blur', () => saveKey(clKey, clDot, 'dtf_cl'));
+
+// Dims
+function updateDims() {
+  const w = parseFloat(wIn.value)||12, h = parseFloat(hIn.value)||14;
+  pxNote.textContent = `${Math.round(w*300).toLocaleString()} × ${Math.round(h*300).toLocaleString()} px @ 300 DPI`;
+  currentAspect = bestAspect(w, h);
+}
+wIn.addEventListener('input', updateDims);
+hIn.addEventListener('input', updateDims);
+updateDims();
+
+// Mode
+document.querySelectorAll('.mode-card').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('.mode-card').forEach(x => x.classList.remove('sel'));
+    c.classList.add('sel');
+  });
+});
+
+// Quality
+document.querySelectorAll('.q-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.q-btn').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    selectedModel = b.dataset.m;
+  });
+});
+
+// File upload
+function loadFile(file) {
+  if (!file?.type.startsWith('image/')) return;
+  uploadedFile = file;
+  const url = URL.createObjectURL(file);
+  thumb.src = url;
+  thumb.style.display = 'block';
+  drop.querySelector('strong').textContent = file.name;
+  drop.querySelector('p').textContent = `${(file.size/1024).toFixed(0)} KB · ready`;
+  checkReady();
+  setLog('Image loaded — ready to generate.');
+}
+
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); loadFile(e.dataTransfer.files[0]); });
+fileIn.addEventListener('change', () => loadFile(fileIn.files[0]));
+
+function checkReady() {
+  const ok = igKey.value.trim().length > 10 && clKey.value.trim().length > 10 && !!uploadedFile && !busy;
+  btnGo.disabled = !ok;
+}
+
+function setLog(msg, state='idle') {
+  log.textContent = msg;
+  sdot.className = 'sdot' + (state==='working'?' working':state==='done'?' done':state==='err'?' err':'');
+  stxt.textContent = state==='working'?'Working...':state==='done'?'Done':state==='err'?'Error':'Ready';
+}
+
+// Analyze with Claude
+async function analyze(file, mode) {
+  const b64 = await new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+
+  const modeInstr = {
+    match: 'MATCH mode: reconstruct faithfully. Extract every element exactly — all text verbatim, layout, colors, style.',
+    interpret: 'INTERPRET mode: use as creative direction. Capture theme, subjects, all text verbatim, but improve composition and quality freely.',
+    hybrid: 'HYBRID mode: extract all text and key elements faithfully (verbatim text, specific icons and positions). Regenerate illustration and background at full quality.'
+  }[mode];
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': clKey.value.trim(),
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-calls': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [{
+        role: 'user',
+        content: [
+          { type:'image', source:{ type:'base64', media_type: file.type||'image/png', data: b64 } },
+          { type:'text', text: `You are a DTF print production specialist. ${modeInstr}
+
+Respond ONLY with valid JSON (no markdown, no backticks):
+{
+  "allText": ["every word/phrase/number visible, verbatim"],
+  "subject": "primary subject description",
+  "elements": ["visual elements list"],
+  "colors": ["dominant colors"],
+  "style": "design style",
+  "layout": "composition description",
+  "issues": ["source quality problems if any"],
+  "prompt": "complete Ideogram generation prompt — detailed, specific, must include all text verbatim in quotes, must end with: ${QUALITY_SUFFIX}",
+  "notes": "anything user should verify before printing"
+}` }
+        ]
+      }]
+    })
+  });
+
+  if (!res.ok) throw new Error(`Claude error ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  const txt = data.content.map(b=>b.text||'').join('');
+  let clean = txt.replace(/```json|```/g,'').trim();
+
+  // Try parsing as-is first
+  try { return JSON.parse(clean); } catch(_) {}
+
+  // If truncated, attempt to recover by closing open structures
+  // Find last complete field and truncate cleanly
+  const promptMatch = clean.match(/"prompt"\s*:\s*"([\s\S]*?)(?:"\s*,|\s*$)/);
+  const textMatch   = clean.match(/"allText"\s*:\s*(\[[\s\S]*?\])/);
+  const subjMatch   = clean.match(/"subject"\s*:\s*"([^"]*)"/);
+  const elemMatch   = clean.match(/"elements"\s*:\s*(\[[\s\S]*?\])/);
+  const colorMatch  = clean.match(/"colors"\s*:\s*(\[[\s\S]*?\])/);
+  const styleMatch  = clean.match(/"style"\s*:\s*"([^"]*)"/);
+  const notesMatch  = clean.match(/"notes"\s*:\s*"([^"]*)"/);
+
+  // Extract prompt — it may be truncated, patch it
+  let prompt = '';
+  if (promptMatch) {
+    prompt = promptMatch[1];
+    // Make sure it ends with the quality suffix if truncated
+    if (!prompt.includes('DTF direct-to-film')) prompt += ' ' + QUALITY_SUFFIX;
+  }
+
+  const recovered = {
+    allText: textMatch ? JSON.parse(textMatch[1]) : [],
+    subject: subjMatch ? subjMatch[1] : 'See mockup',
+    elements: elemMatch ? JSON.parse(elemMatch[1]) : [],
+    colors: colorMatch ? JSON.parse(colorMatch[1]) : [],
+    style: styleMatch ? styleMatch[1] : 'See mockup',
+    issues: [],
+    prompt: prompt || QUALITY_SUFFIX,
+    notes: notesMatch ? notesMatch[1] : 'Response was truncated — verify all text in the output carefully.'
+  };
+
+  if (!recovered.prompt) throw new Error('Could not extract a usable prompt from Claude response. Try again.');
+  return recovered;
+}
+
+// Generate with Ideogram (via proxy)
+async function generate(prompt, aspect, model, mode) {
+  const res = await fetch('/ideogram', {
+    method: 'POST',
+    headers: { 'x-ideogram-key': igKey.value.trim(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      image_request: {
+        prompt,
+        aspect_ratio: aspect,
+        model,
+        magic_prompt_option: mode==='interpret'?'ON':'OFF',
+        style_type: 'DESIGN'
+      }
+    })
+  });
+
+  if (!res.ok) throw new Error(`Ideogram error ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  const url = data.data?.[0]?.url;
+  if (!url) throw new Error('Ideogram returned no image.');
+  return url;
+}
+
+// Show spinner
+function showSpinner(msg) {
+  empty.style.display = 'none';
+  canvas.querySelectorAll('.result-card,.analysis-card,.prompt-card,.spin-wrap').forEach(e=>e.remove());
+  const d = document.createElement('div');
+  d.className = 'spin-wrap';
+  d.innerHTML = `<div class="spinner"></div><p>${msg}</p>`;
+  canvas.appendChild(d);
+}
+
+// Render result
+function renderResult(imgUrl, analysis, mode) {
+  lastUrl = imgUrl;
+  canvas.querySelectorAll('.result-card,.analysis-card,.prompt-card,.spin-wrap').forEach(e=>e.remove());
+  empty.style.display = 'none';
+
+  const w = parseFloat(wIn.value)||12, h = parseFloat(hIn.value)||14;
+
+  // Analysis
+  const ac = document.createElement('div');
+  ac.className = 'analysis-card';
+  ac.innerHTML = `
+    <div class="ac-head"><span>Design Analysis</span><span>${mode.toUpperCase()} · ${currentAspect}</span></div>
+    <div class="ac-body">
+      <span class="ac-field">Text Found</span>
+      <span class="ac-val">${(analysis.allText||[]).join(' · ')||'—'}</span>
+      <span class="ac-field">Subject</span>
+      <span class="ac-val">${analysis.subject||'—'}</span>
+      <span class="ac-field">Elements</span>
+      <span class="ac-val">${(analysis.elements||[]).join(', ')||'—'}</span>
+      <span class="ac-field">Style</span>
+      <span class="ac-val">${analysis.style||'—'}</span>
+      ${analysis.notes?`<span class="ac-field">⚠ Verify Before Printing</span><span class="ac-val ac-warn">${analysis.notes}</span>`:''}
+    </div>`;
+  canvas.appendChild(ac);
+
+  // Prompt
+  const pc = document.createElement('div');
+  pc.className = 'prompt-card';
+  pc.innerHTML = `<div class="pc-head">Prompt Used</div><div class="pc-body">${currentPrompt}</div>`;
+  canvas.appendChild(pc);
+
+  // Image card
+  const rc = document.createElement('div');
+  rc.className = 'result-card';
+  rc.innerHTML = `
+    <div class="rc-head">
+      <strong>Output — ${w}"×${h}" @ 300 DPI</strong>
+      <span>${Math.round(w*300).toLocaleString()}×${Math.round(h*300).toLocaleString()}px</span>
+    </div>
+    <div class="rc-img"><img src="${imgUrl}" alt="Generated" crossorigin="anonymous"></div>
+    <div class="rc-foot">
+      <button class="pri" id="rc-dl">↓ Download PNG</button>
+      <button id="rc-regen">↺ Regenerate</button>
+      <button id="rc-flip">⇄ Switch to ${mode==='match'?'Interpret':'Match'}</button>
+    </div>`;
+  canvas.appendChild(rc);
+
+  rc.querySelector('#rc-dl').addEventListener('click', doDownload);
+  rc.querySelector('#rc-regen').addEventListener('click', ()=>run(true));
+  rc.querySelector('#rc-flip').addEventListener('click', ()=>{
+    const nm = mode==='match'?'interpret':'match';
+    document.querySelector(`input[value="${nm}"]`).closest('.mode-card').click();
+    run(false);
+  });
+
+  btnDl.disabled = false;
+  btnReg.disabled = false;
+  tbar.textContent = `${w}"×${h}" · ${currentAspect} · ${selectedModel}`;
+}
+
+// Download
+async function doDownload() {
+  if (!lastUrl) return;
+  try {
+    const res = await fetch(lastUrl);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `dtf_${wIn.value||12}x${hIn.value||14}in_300dpi.png`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    setLog('Downloaded.','done');
+  } catch {
+    window.open(lastUrl,'_blank');
+  }
+}
+
+btnDl.addEventListener('click', doDownload);
+btnReg.addEventListener('click', ()=>run(true));
+
+// Main flow
+async function run(reuse=false) {
+  if (busy || !uploadedFile) return;
+  busy = true;
+  btnGo.disabled = true; btnReg.disabled = true; btnDl.disabled = true;
+
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+
+  try {
+    let analysis;
+    if (!reuse || !currentPrompt) {
+      showSpinner('Step 1 of 2 — Claude is reading your mockup...');
+      setLog('Sending to Claude for design analysis...','working');
+      analysis = await analyze(uploadedFile, mode);
+      currentPrompt = analysis.prompt;
+    } else {
+      analysis = { allText:[], subject:'—', elements:[], style:'—', notes:'Regenerated with same prompt.' };
+    }
+
+    showSpinner('Step 2 of 2 — Ideogram is generating your print file...');
+    setLog('Generating with Ideogram...','working');
+
+    const imgUrl = await generate(currentPrompt, currentAspect, selectedModel, mode);
+    renderResult(imgUrl, analysis, mode);
+    setLog('Done. Check all text carefully before sending to printer.','done');
+
+  } catch(err) {
+    canvas.querySelectorAll('.spin-wrap').forEach(e=>e.remove());
+    if (!canvas.querySelector('.result-card')) empty.style.display='';
+    setLog('Error: ' + err.message,'err');
+    console.error(err);
+  }
+
+  busy = false;
+  checkReady();
+}
+
+btnGo.addEventListener('click', ()=>run(false));
+</script>
+</body>
+</html>

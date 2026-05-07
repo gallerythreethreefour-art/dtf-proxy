@@ -6,8 +6,10 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 
-// Health check
-app.get('/', (req, res) => res.json({ status: 'DTF Proxy running' }));
+// Serve the app
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('/health', (req, res) => res.json({ status: 'DTF Proxy running' }));
 
 // Ideogram proxy
 app.post('/ideogram', async (req, res) => {
