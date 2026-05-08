@@ -225,6 +225,26 @@ header { background: var(--ink); color: var(--paper); padding: 14px 24px; displa
         </label>
       </div>
 
+
+      <div class="block">
+        <div class="blabel">Font <span style="opacity:.5;font-weight:300">(optional)</span></div>
+        <select id="m-font-select" style="width:100%;background:var(--surface);border:1px solid var(--rule);color:var(--ink);font-family:'DM Mono',monospace;font-size:0.75rem;padding:7px 9px;border-radius:3px;outline:none;margin-bottom:7px;">
+          <option value="">No preference</option>
+          <option value="Bebas Neue bold condensed display font">Bebas Neue (bold condensed)</option>
+          <option value="Impact heavy bold font">Impact (heavy)</option>
+          <option value="vintage western slab serif font">Western / Slab Serif</option>
+          <option value="distressed grunge hand-lettered font">Distressed / Hand-lettered</option>
+          <option value="clean modern sans-serif font">Clean Sans-Serif</option>
+          <option value="elegant script cursive font">Elegant Script</option>
+          <option value="varsity athletic college font">Varsity / Athletic</option>
+          <option value="military stencil block font">Military Stencil</option>
+          <option value="old english blackletter gothic font">Old English / Blackletter</option>
+          <option value="retro 70s groovy font">Retro 70s</option>
+          <option value="custom">Custom font name...</option>
+        </select>
+        <input type="text" id="m-font-custom" placeholder="type font name..." style="display:none;width:100%;background:var(--surface);border:1px solid var(--rule);color:var(--ink);font-family:'DM Mono',monospace;font-size:0.75rem;padding:7px 9px;border-radius:3px;outline:none;">
+      </div>
+
       <div class="block">
         <div class="blabel">4 · Quality</div>
         <div class="q-row">
@@ -285,6 +305,28 @@ header { background: var(--ink); color: var(--paper); padding: 14px 24px; displa
         <div class="scratch-field">
           <label>Additional Elements</label>
           <input type="text" id="sc-elements" placeholder="e.g. stars, banner, campfire, fish">
+        </div>
+
+        <div class="scratch-field">
+          <label>Font</label>
+          <select id="sc-font-select">
+            <option value="">No preference</option>
+            <option value="Bebas Neue bold condensed display font">Bebas Neue (bold condensed)</option>
+            <option value="Impact heavy bold font">Impact (heavy)</option>
+            <option value="vintage western slab serif font">Western / Slab Serif</option>
+            <option value="distressed grunge hand-lettered font">Distressed / Hand-lettered</option>
+            <option value="clean modern sans-serif font">Clean Sans-Serif</option>
+            <option value="elegant script cursive font">Elegant Script</option>
+            <option value="varsity athletic college font">Varsity / Athletic</option>
+            <option value="military stencil block font">Military Stencil</option>
+            <option value="old english blackletter gothic font">Old English / Blackletter</option>
+            <option value="retro 70s groovy font">Retro 70s</option>
+            <option value="custom">Custom font name...</option>
+          </select>
+        </div>
+        <div class="scratch-field" id="sc-font-custom-wrap" style="display:none">
+          <label>Custom Font Name</label>
+          <input type="text" id="sc-font-custom" placeholder="e.g. Cinzel, Lobster, Playfair Display...">
         </div>
 
         <div class="scratch-field">
@@ -432,6 +474,19 @@ document.getElementById('sc-style').addEventListener('change',function(){
   buildScratchPrompt();
 });
 
+// Scratch font custom
+document.getElementById('sc-font-select').addEventListener('change',function(){
+  const wrap=document.getElementById('sc-font-custom-wrap');
+  if(wrap) wrap.style.display=this.value==='custom'?'block':'none';
+  buildScratchPrompt();
+});
+
+// Mockup font custom
+document.getElementById('m-font-select').addEventListener('change',function(){
+  const input=document.getElementById('m-font-custom');
+  if(input) input.style.display=this.value==='custom'?'block':'none';
+});
+
 // Scratch prompt builder
 function buildScratchPrompt(){
   const subject=document.getElementById('sc-subject').value.trim();
@@ -447,12 +502,16 @@ function buildScratchPrompt(){
   if(style) parts.push(style);
   if(colors) parts.push(`color palette: ${colors}`);
   if(elements) parts.push(`include: ${elements}`);
+  const scFontEl=document.getElementById('sc-font-select');
+  const scFontCustom=document.getElementById('sc-font-custom');
+  const scFont=scFontEl&&scFontEl.value==='custom'?(scFontCustom?scFontCustom.value.trim():''):(scFontEl?scFontEl.value:'');
+  if(scFont) parts.push(`typography in ${scFont}`);
   parts.push(QUALITY_SUFFIX);
 
   scratchPromptEl.value=parts.join(', ');
 }
 
-['sc-subject','sc-text','sc-colors','sc-elements','sc-style-custom'].forEach(id=>{
+['sc-subject','sc-text','sc-colors','sc-elements','sc-style-custom','sc-font-custom'].forEach(id=>{
   const el=document.getElementById(id);
   if(el) el.addEventListener('input',buildScratchPrompt);
 });
@@ -668,7 +727,11 @@ async function run(reuse=false){
       showSpinner('Step 1 of 2 — Claude is reading your mockup...');
       setLog('Sending to Claude for design analysis...','working');
       analysis=await analyze(uploadedFile,mode);
-      currentPrompt=analysis.prompt;
+      // Append font preference to prompt if set
+      const mFontSel=document.getElementById('m-font-select');
+      const mFontCustom=document.getElementById('m-font-custom');
+      const mFont=mFontSel&&mFontSel.value==='custom'?(mFontCustom?mFontCustom.value.trim():''):(mFontSel?mFontSel.value:'');
+      currentPrompt=analysis.prompt+(mFont?`, typography and text rendered in ${mFont}`:'');
     } else {
       analysis=null;
     }
